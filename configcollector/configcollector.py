@@ -3,7 +3,7 @@
 import sys
 from argparse import ArgumentParser
 import json
-from configcollector.router import Router
+from configcollector.router import *
 
 
 def main():
@@ -42,7 +42,15 @@ def main():
 
     # Login and get config for each routers
     for num in range(len(router_info)):
-        router = Router(router_info[num])
+        try:
+            # convert class name, IOS-XR -> IOSXR
+            target_os = router_info[num]['os'].replace('-', '')
+            # create instance
+            router = globals()[target_os](router_info[num])
+        except KeyError:
+            sys.stderr.write('Unknown OS, %s\n' % router_info[num]['os'])
+            sys.exit(1)
+
         print('Accessing router: ' + router_info[num]['hostname'] + '...')
 
         # pylint: disable=bare-except, fixme

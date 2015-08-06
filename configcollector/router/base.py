@@ -3,10 +3,11 @@
 from Exscript.protocols import SSH2
 from Exscript.Account import Account
 
-
 class Router:
 
     """Router class."""
+
+    Command_List = {}
 
     def __init__(self, router_info):
         """Initialize."""
@@ -16,6 +17,7 @@ class Router:
         self.ipv4 = router_info['ipv4']
         self.os_name = router_info['os']
         self.session = None
+	self.result = None
 
     def login(self):
         """login."""
@@ -33,17 +35,13 @@ class Router:
 
     def get_config(self):
         """get configuration."""
-        if (
-                self.os_name == 'IOS-XR' or
-                self.os_name == 'IOS' or
-                self.os_name == 'IOS-XE'):
-            self.session.execute('terminal length 0')
-            self.session.execute('show running-config')
+        command_key = 'get-config'
+        if (not self.Command_List.has_key(command_key)):
+            raise NameError(command_key + ' not supported')
+
+	for cmd in self.Command_List[command_key]:
+            self.session.execute(cmd)
             result = self.session.response
-        elif self.os_name == 'JUNOS':
-            self.session.execute('show configuration | no-more')
-            result = self.session.response
-        else:
-            raise ValueError('OS is unknown value.\
-                Please describe from  JUNOS / IOS / IOS-XE / IOS-XR.')
-        return result
+        self.result = result
+
+        return self.result
